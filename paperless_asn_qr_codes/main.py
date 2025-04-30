@@ -8,17 +8,41 @@ from reportlab_qrcode import QRCodeImage
 
 from paperless_asn_qr_codes import avery_labels
 
-def render(c, _, y):
+def render(c, width, height, *args):
     """ Render the QR code and ASN number on the label """
     global startASN
     global digits
-    barcode_value = f"ASN{startASN:0{digits}d}"
+    global jd_prefix
+    value = f"{startASN:0{digits}d}"  # Just the number, no prefix
+    barcode_value = f"ASN{jd_prefix}{value}"  # With JD prefix for QR code
     startASN = startASN + 1
 
-    qr = QRCodeImage(barcode_value, size=y * 0.9)
-    qr.drawOn(c, 1 * mm, y * 0.05)
-    c.setFont("Helvetica", 2 * mm)
-    c.drawString(y, (y - 2 * mm) / 2, barcode_value)
+    # QR code size and position
+    qr_size = height * 0.9
+    qr = QRCodeImage(barcode_value, size=qr_size)
+    qr.drawOn(c, .1 * mm, height * 0.05)
+
+    text = c.beginText()
+    # Position text to the right of QR code (qr_size + a small gap)
+    x = qr_size + .2 * mm  # Start text 1mm to the right of QR code
+    y0 = (height - 2 * mm) / 2 + 3.5 * mm
+
+    # First line
+    text.setTextOrigin(x, y0)
+    text.setFont("Helvetica", 2.5 * mm)
+    text.textLine("ASN ")
+
+    # Second line
+    text.setFont("Helvetica", 3 * mm)
+    text.setTextOrigin(x, y0 - 3 * mm)
+    text.textLine(f"{jd_prefix}")
+
+    # Third line
+    text.setFont("Helvetica", 4 * mm)
+    text.setTextOrigin(x, y0 - 7 * mm)
+    text.textLine(value)
+
+    c.drawText(text)
 
 
 def main():
@@ -52,8 +76,8 @@ def main():
     parser.add_argument(
         "--digits",
         "-d",
-        default=7,
-        help="Number of digits in the ASN (default: 7, produces 'ASN0000001')",
+        default=4,
+        help="Number of digits in the ASN (default: 4, produces 'ASN000001')",
         type=int,
     )
     parser.add_argument(
@@ -88,12 +112,25 @@ def main():
         help="""Define the starting position on the sheet,
                 eighter as ROW:COLUMN or COUNT, both starting from 1 (default: 1:1 or 1)""",
     )
+    parser.add_argument(
+        "--jd", 
+        "-jd",
+        type=str,
+        default="13.08",
+        help="""Johnny Decimal prefix (default: 13.08)""",
+        )
 
     args = parser.parse_args()
     global startASN
     global digits
     startASN = int(args.start_asn)
     digits = int(args.digits)
+
+    # Ensure trailing period
+    global jd_prefix
+    jd_prefix = args.jd if args.jd.endswith('.') else args.jd + '.'
+
+
     label = avery_labels.AveryLabel(
         args.format, args.border, topDown=args.row_wise, start_pos=args.start_position
     )
@@ -105,5 +142,8 @@ def main():
     else:
         # Otherwise number of pages*labels - offset
         count = args.pages * label.across * label.down - label.position
+    count = int(count)  # Convert to integer
+
+    # Call render with just the function and count
     label.render(render, count)
     label.close()
