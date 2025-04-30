@@ -37,9 +37,9 @@ def render(c, width, height, *args):
     qr = QRCodeImage(barcode_value, size=qr_size)
     qr.drawOn(c, margin, height * 0.05)  # Consistent left margin
 
-    # System identifier in upper right corner
-    #c.setFont("Helvetica", 4 * mm)
-    #c.drawString(width - 5 * mm, height - 5 * mm, jd_system)
+    # ASN identifier in upper right corner
+    c.setFont("Helvetica", 2.5 * mm)
+    c.drawString(width - 7 * mm, height - 4 * mm, "ASN")
 
     text = c.beginText()
     # Position text to the right of QR code
@@ -47,18 +47,42 @@ def render(c, width, height, *args):
     y0 = (height - 2 * mm) / 2 + 3.5 * mm
 
     # First line
-    text.setTextOrigin(x, y0)
-    text.setFont("Helvetica", 2.5 * mm)
-    text.textLine("ASN")
+    #text.setTextOrigin(x, y0)
+    #text.setFont("Helvetica", 2.5 * mm)
+    #text.textLine("ASN")
 
     # Second line
     text.setFont("Helvetica", 3 * mm)
     text.setTextOrigin(x, y0 - 3 * mm)
-    text.textLine(f"{jd_system}.{jd_prefix}")
+    
+    # Save the current state
+    c.saveState()
+    
+    # Get text dimensions for the system character
+    system_width = c.stringWidth(jd_system, "Helvetica", 3 * mm)
+    system_height = 3 * mm
+    
+    # Draw black rectangle for background
+    c.setFillColor('black')
+    c.rect(x, y0 - 3.65 * mm, system_width + 1 * mm, system_height + .25 * mm, fill=1)
+    
+    # Draw white text
+    c.setFillColor('white')
+    c.setFont("Helvetica", 3 * mm)
+    c.drawString(x + 0.5 * mm, y0 - 3 * mm, jd_system)
+    
+    # Restore state for remaining text
+    c.restoreState()
+    
+    # Continue with regular text
+    text = c.beginText()
+    text.setTextOrigin(x + system_width + 1.5 * mm, y0 - 3 * mm)
+    text.setFont("Helvetica", 3 * mm)
+    text.textLine(f".{jd_prefix}")
 
     # Third line
     text.setFont("Helvetica", 4 * mm)
-    text.setTextOrigin(x, y0 - 7 * mm)
+    text.setTextOrigin(x + 1*mm, y0 - 7 * mm)
     text.textLine(value)
 
     c.drawText(text)
