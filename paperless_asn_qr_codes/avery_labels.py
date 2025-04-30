@@ -117,6 +117,14 @@ labelInfo: dict[str, LabelInfo] = {
         gutter_size=(2.54*mm, 0),
         margin=(9.75*mm,21.5*mm),
         pagesize=A4,
+    ),
+    "spartan100f": LabelInfo(
+        labels_horizontal=8,
+        labels_vertical=20,
+        label_size=(25.58*mm, 12.76*mm),
+        gutter_size=(0*mm, 0),
+        margin=(6*mm,11*mm),
+        pagesize=LETTER,
     )
 }
 
