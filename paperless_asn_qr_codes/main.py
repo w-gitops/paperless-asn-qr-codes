@@ -84,7 +84,7 @@ def main():
         help="The output file to write to (default: auto-generated based on ASN range)",
     )
     parser.add_argument(
-        "--format", "-f", choices=available_formats, default="averyL4731"
+        "--format", "-f", choices=available_formats, default="spartan100f", help="The format of the label to use (default: spartan100f)",
     )
     parser.add_argument(
         "--digits",
@@ -102,8 +102,8 @@ def main():
     parser.add_argument(
         "--row-wise",
         "-r",
-        action="store_false",
-        help="Increment the ASNs row-wise, go from left to right",
+        action="store_true",
+        help="Increment the ASNs row-wise, go from left to right. Default is row-wise.",
     )
     parser.add_argument(
         "--num-labels",
