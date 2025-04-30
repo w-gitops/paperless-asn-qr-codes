@@ -47,6 +47,16 @@ def render(c, width, height, *args):
 
     c.drawText(text)
 
+def calculate_filename(jd_prefix, start_asn, count, digits):
+    """Calculate the default filename based on JD prefix and ASN range"""
+    # Remove trailing period if present for filename
+    jd = jd_prefix.rstrip('.')
+    # Calculate the last ASN
+    end_asn = start_asn + count - 1
+    # Format both numbers with leading zeros based on digits
+    start_str = f"{start_asn:0{digits}d}"
+    end_str = f"{end_asn:0{digits}d}"
+    return f"asn_labels_{jd}.{start_str}-{jd}.{end_str}.pdf"
 
 def main():
     """ Main function for the paperless ASN QR code generator """
@@ -70,8 +80,8 @@ def main():
     parser.add_argument(
         "output_file",
         type=str,
-        default="labels.pdf",
-        help="The output file to write to (default: labels.pdf)",
+        nargs='?',  # Make the argument optional
+        help="The output file to write to (default: auto-generated based on ASN range)",
     )
     parser.add_argument(
         "--format", "-f", choices=available_formats, default="averyL4731"
@@ -80,7 +90,7 @@ def main():
         "--digits",
         "-d",
         default=4,
-        help="Number of digits in the ASN (default: 4, produces 'ASN000001')",
+        help="Number of digits in the ASN (default: 4, produces 'ASN13.08.0001')",
         type=int,
     )
     parser.add_argument(
@@ -133,20 +143,25 @@ def main():
     global jd_prefix
     jd_prefix = args.jd if args.jd.endswith('.') else args.jd + '.'
 
-
+    # Create the label object FIRST
     label = avery_labels.AveryLabel(
         args.format, args.border, topDown=args.row_wise, start_pos=args.start_position
     )
-    label.open(args.output_file)
 
-    # If defined use parameter for number of labels
+    # THEN calculate count
     if args.num_labels:
         count = args.num_labels
     else:
         # Otherwise number of pages*labels - offset
         count = args.pages * label.across * label.down - label.position
-    count = int(count)  # Convert to integer
+    count = int(count)
 
-    # Call render with just the function and count
+    # Generate default filename if none provided
+    output_file = args.output_file
+    if output_file is None:
+        output_file = calculate_filename(jd_prefix, startASN, count, digits)
+
+    # Open the file and render
+    label.open(output_file)
     label.render(render, count)
     label.close()
