@@ -17,14 +17,17 @@ def render(c, width, height, *args):
     barcode_value = f"ASN{jd_prefix}{value}"  # With JD prefix for QR code
     startASN = startASN + 1
 
+    # Add small margins to ensure content isn't at the edge
+    margin = 1 * mm
+    
     # QR code size and position
     qr_size = height * 0.9
     qr = QRCodeImage(barcode_value, size=qr_size)
-    qr.drawOn(c, .1 * mm, height * 0.05)
+    qr.drawOn(c, margin, height * 0.05)  # Consistent left margin
 
     text = c.beginText()
-    # Position text to the right of QR code (qr_size + a small gap)
-    x = qr_size + .2 * mm  # Start text 1mm to the right of QR code
+    # Position text to the right of QR code
+    x = qr_size + 2 * margin  # More consistent spacing
     y0 = (height - 2 * mm) / 2 + 3.5 * mm
 
     # First line
