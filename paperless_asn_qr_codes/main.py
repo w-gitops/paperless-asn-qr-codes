@@ -17,7 +17,7 @@ def calculate_filename(jd_prefix, start_asn, count, digits, system):
     # Format both numbers with leading zeros based on digits
     start_str = f"{start_asn:0{digits}d}"
     end_str = f"{end_asn:0{digits}d}"
-    return f"asn_labels_{system}.{jd}.{start_str}-{jd}.{end_str}.pdf"
+    return f"asn_labels_{system}.{jd}.{start_str} - {system}.{jd}.{end_str}.pdf"
 
 def render(c, width, height, *args):
     """ Render the QR code and ASN number on the label """
@@ -26,7 +26,7 @@ def render(c, width, height, *args):
     global jd_prefix
     global jd_system
     value = f"{startASN:0{digits}d}"  # Just the number, no prefix
-    barcode_value = f"{jd_system}ASN{jd_prefix}{value}"  # With system ID and JD prefix for QR code
+    barcode_value = f"ASN{jd_system}.{jd_prefix}{value}"  # With system ID and JD prefix for QR code
     startASN = startASN + 1
 
     # Add small margins to ensure content isn't at the edge
@@ -37,20 +37,24 @@ def render(c, width, height, *args):
     qr = QRCodeImage(barcode_value, size=qr_size)
     qr.drawOn(c, margin, height * 0.05)  # Consistent left margin
 
+    # System identifier in upper right corner
+    #c.setFont("Helvetica", 4 * mm)
+    #c.drawString(width - 5 * mm, height - 5 * mm, jd_system)
+
     text = c.beginText()
     # Position text to the right of QR code
-    x = qr_size + 2 * margin  # More consistent spacing
+    x = qr_size + .4 * margin  # More consistent spacing
     y0 = (height - 2 * mm) / 2 + 3.5 * mm
 
     # First line
     text.setTextOrigin(x, y0)
     text.setFont("Helvetica", 2.5 * mm)
-    text.textLine("ASN ")
+    text.textLine("ASN")
 
     # Second line
     text.setFont("Helvetica", 3 * mm)
     text.setTextOrigin(x, y0 - 3 * mm)
-    text.textLine(f"{jd_prefix}")
+    text.textLine(f"{jd_system}.{jd_prefix}")
 
     # Third line
     text.setFont("Helvetica", 4 * mm)
