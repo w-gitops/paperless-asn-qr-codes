@@ -1,0 +1,3 @@
+reportlab
+reportlab-qrcode
+paperless_asn_qr_codes
