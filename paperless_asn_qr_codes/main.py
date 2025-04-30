@@ -8,13 +8,25 @@ from reportlab_qrcode import QRCodeImage
 
 from paperless_asn_qr_codes import avery_labels
 
+def calculate_filename(jd_prefix, start_asn, count, digits, system):
+    """Calculate the default filename based on JD prefix and ASN range"""
+    # Remove trailing period if present for filename
+    jd = jd_prefix.rstrip('.')
+    # Calculate the last ASN
+    end_asn = start_asn + count - 1
+    # Format both numbers with leading zeros based on digits
+    start_str = f"{start_asn:0{digits}d}"
+    end_str = f"{end_asn:0{digits}d}"
+    return f"asn_labels_{system}.{jd}.{start_str}-{jd}.{end_str}.pdf"
+
 def render(c, width, height, *args):
     """ Render the QR code and ASN number on the label """
     global startASN
     global digits
     global jd_prefix
+    global jd_system
     value = f"{startASN:0{digits}d}"  # Just the number, no prefix
-    barcode_value = f"ASN{jd_prefix}{value}"  # With JD prefix for QR code
+    barcode_value = f"{jd_system}ASN{jd_prefix}{value}"  # With system ID and JD prefix for QR code
     startASN = startASN + 1
 
     # Add small margins to ensure content isn't at the edge
@@ -46,17 +58,6 @@ def render(c, width, height, *args):
     text.textLine(value)
 
     c.drawText(text)
-
-def calculate_filename(jd_prefix, start_asn, count, digits):
-    """Calculate the default filename based on JD prefix and ASN range"""
-    # Remove trailing period if present for filename
-    jd = jd_prefix.rstrip('.')
-    # Calculate the last ASN
-    end_asn = start_asn + count - 1
-    # Format both numbers with leading zeros based on digits
-    start_str = f"{start_asn:0{digits}d}"
-    end_str = f"{end_asn:0{digits}d}"
-    return f"asn_labels_{jd}.{start_str}-{jd}.{end_str}.pdf"
 
 def main():
     """ Main function for the paperless ASN QR code generator """
@@ -131,13 +132,28 @@ def main():
         type=str,
         default="13.08",
         help="""Johnny Decimal prefix (default: 13.08)""",
-        )
+    )
+    parser.add_argument(
+        "--jd-system",
+        "-js",
+        type=str,
+        default="P",
+        help="Johnny Decimal system identifier (single character, default: P)",
+        metavar="CHAR"
+    )
 
     args = parser.parse_args()
+    
+    # Validate jd_system is a single character
+    if len(args.jd_system) != 1:
+        parser.error("--jd-system must be a single character")
+
     global startASN
     global digits
+    global jd_system
     startASN = int(args.start_asn)
     digits = int(args.digits)
+    jd_system = args.jd_system
 
     # Ensure trailing period
     global jd_prefix
@@ -159,7 +175,7 @@ def main():
     # Generate default filename if none provided
     output_file = args.output_file
     if output_file is None:
-        output_file = calculate_filename(jd_prefix, startASN, count, digits)
+        output_file = calculate_filename(jd_prefix, startASN, count, digits, jd_system)
 
     # Open the file and render
     label.open(output_file)
