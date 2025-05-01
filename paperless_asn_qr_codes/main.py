@@ -30,7 +30,7 @@ def render(c, width, height, *args):
     startASN = startASN + 1
 
     # Add small margins to ensure content isn't at the edge
-    margin = 1 * mm
+    margin = .5 * mm
     
     # QR code size and position
     qr_size = height * 0.9
@@ -64,25 +64,25 @@ def render(c, width, height, *args):
     
     # Draw black rectangle for background
     c.setFillColor('black')
-    c.rect(x, y0 - 3.65 * mm, system_width + 1 * mm, system_height + .25 * mm, fill=1)
+    c.rect(x, y0 - 3.25 * mm, system_width + 2 * mm, system_height + 2 * mm, fill=1)
     
     # Draw white text
     c.setFillColor('white')
-    c.setFont("Helvetica", 3 * mm)
-    c.drawString(x + 0.5 * mm, y0 - 3 * mm, jd_system)
+    c.setFont("Helvetica", 5 * mm)
+    c.drawString(x + 0.25 * mm, y0 - 2.55 * mm, jd_system)
     
     # Restore state for remaining text
     c.restoreState()
     
     # Continue with regular text
     text = c.beginText()
-    text.setTextOrigin(x + system_width + 1.5 * mm, y0 - 3 * mm)
-    text.setFont("Helvetica", 3 * mm)
+    text.setTextOrigin(x + system_width + 2.25 * mm, y0 - 3 * mm)
+    text.setFont("Helvetica-Bold", 3 * mm)
     text.textLine(f".{jd_prefix}")
 
     # Third line
     text.setFont("Helvetica", 4 * mm)
-    text.setTextOrigin(x + 1*mm, y0 - 7 * mm)
+    text.setTextOrigin(x - .5 *mm, y0 - 7 * mm)
     text.textLine(value)
 
     c.drawText(text)
