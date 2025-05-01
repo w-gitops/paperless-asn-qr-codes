@@ -8,7 +8,7 @@ from reportlab_qrcode import QRCodeImage
 
 from paperless_asn_qr_codes import avery_labels
 
-def calculate_filename(jd_prefix, start_asn, count, digits, system):
+def calculate_filename(jd_prefix, start_asn, count, digits, system, prefix):
     """Calculate the default filename based on JD prefix and ASN range"""
     # Remove trailing period if present for filename
     jd = jd_prefix.rstrip('.')
@@ -17,7 +17,7 @@ def calculate_filename(jd_prefix, start_asn, count, digits, system):
     # Format both numbers with leading zeros based on digits
     start_str = f"{start_asn:0{digits}d}"
     end_str = f"{end_asn:0{digits}d}"
-    return f"asn_labels_{system}.{jd}.{start_str} - {system}.{jd}.{end_str}.pdf"
+    return f"labels_{prefix}.{system}.{jd}.{start_str} - {prefix}.{system}.{jd}.{end_str}.pdf"
 
 def render(c, width, height, *args):
     """ Render the QR code and ASN number on the label """
@@ -25,8 +25,9 @@ def render(c, width, height, *args):
     global digits
     global jd_prefix
     global jd_system
-    value = f"{startASN:0{digits}d}"  # Just the number, no prefix
-    barcode_value = f"ASN{jd_system}.{jd_prefix}{value}"  # With system ID and JD prefix for QR code
+    global prefix
+    value = f"{startASN:0{digits}d}"
+    barcode_value = f"{prefix}.{jd_system}.{jd_prefix}.{value}"
     startASN = startASN + 1
 
     # Add small margins to ensure content isn't at the edge
@@ -37,9 +38,11 @@ def render(c, width, height, *args):
     qr = QRCodeImage(barcode_value, size=qr_size)
     qr.drawOn(c, margin, height * 0.05)  # Consistent left margin
 
-    # ASN identifier in upper right corner
+    # Prefix identifier in upper right corner
     c.setFont("Helvetica", 2.5 * mm)
-    c.drawString(width - 7 * mm, height - 4 * mm, "ASN")
+    prefix_width = c.stringWidth(prefix, "Helvetica", 2.5 * mm)
+    # Adjust x position based on text width, keep margin from right edge
+    c.drawString(width - prefix_width - 1 * mm, height - 4 * mm, prefix)
 
     text = c.beginText()
     # Position text to the right of QR code
@@ -47,9 +50,9 @@ def render(c, width, height, *args):
     y0 = (height - 2 * mm) / 2 + 3.5 * mm
 
     # First line
-    #text.setTextOrigin(x, y0)
-    #text.setFont("Helvetica", 2.5 * mm)
-    #text.textLine("ASN")
+    text.setTextOrigin(x, y0)
+    text.setFont("Helvetica", 2.5 * mm)
+    text.textLine(f"{prefix} ")
 
     # Second line
     text.setFont("Helvetica", 3 * mm)
@@ -169,6 +172,13 @@ def main():
         help="Johnny Decimal system identifier (single character, default: P)",
         metavar="CHAR"
     )
+    parser.add_argument(
+        "--prefix",
+        "-pre",
+        type=str,
+        default="ASN",
+        help="Prefix for the label and barcode (default: ASN)",
+    )
 
     args = parser.parse_args()
     
@@ -179,13 +189,15 @@ def main():
     global startASN
     global digits
     global jd_system
+    global prefix
     startASN = int(args.start_asn)
     digits = int(args.digits)
     jd_system = args.jd_system
+    prefix = args.prefix
 
     # Ensure trailing period
     global jd_prefix
-    jd_prefix = args.jd if args.jd.endswith('.') else args.jd + '.'
+    jd_prefix = args.jd
 
     # Create the label object FIRST
     label = avery_labels.AveryLabel(
@@ -203,7 +215,7 @@ def main():
     # Generate default filename if none provided
     output_file = args.output_file
     if output_file is None:
-        output_file = calculate_filename(jd_prefix, startASN, count, digits, jd_system)
+        output_file = calculate_filename(jd_prefix, startASN, count, digits, jd_system, prefix)
 
     # Open the file and render
     label.open(output_file)
