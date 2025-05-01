@@ -17,7 +17,7 @@ def calculate_filename(jd_prefix, start_asn, count, digits, system, prefix):
     # Format both numbers with leading zeros based on digits
     start_str = f"{start_asn:0{digits}d}"
     end_str = f"{end_asn:0{digits}d}"
-    return f"labels_{prefix}.{system}.{jd}.{start_str} - {prefix}.{system}.{jd}.{end_str}.pdf"
+    return f"qr_labels_{prefix}.{system}.{jd}.{start_str} - {prefix}.{system}.{jd}.{end_str}.pdf"
 
 def render(c, width, height, *args):
     """ Render the QR code and ASN number on the label """
