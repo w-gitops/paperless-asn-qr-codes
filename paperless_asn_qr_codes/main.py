@@ -27,7 +27,7 @@ def render(c, width, height, *args):
     global jd_system
     global prefix
     value = f"{startASN:0{digits}d}"
-    barcode_value = f"{prefix}.{jd_system}.{jd_prefix}.{value}"
+    barcode_value = f"{prefix}{jd_system}{jd_prefix}{value}"
     startASN = startASN + 1
 
     # Add small margins to ensure content isn't at the edge
@@ -81,11 +81,11 @@ def render(c, width, height, *args):
     text = c.beginText()
     text.setTextOrigin(x + system_width + 2.25 * mm, y0 - 3 * mm)
     text.setFont("Helvetica-Bold", 3 * mm)
-    text.textLine(f".{jd_prefix}")
+    text.textLine(f" {jd_prefix}")
 
     # Third line
     text.setFont("Helvetica", 4 * mm)
-    text.setTextOrigin(x - .5 *mm, y0 - 7 * mm)
+    text.setTextOrigin(x + 2 *mm, y0 - 7 * mm)
     text.textLine(value)
 
     c.drawText(text)
@@ -161,15 +161,15 @@ def main():
         "--jd", 
         "-jd",
         type=str,
-        default="13.08",
+        default="1308",
         help="""Johnny Decimal prefix (default: 13.08)""",
     )
     parser.add_argument(
         "--jd-system",
         "-js",
         type=str,
-        default="P",
-        help="Johnny Decimal system identifier (single character, default: P)",
+        default="1",
+        help="Johnny Decimal system identifier (single character, default: 1)",
         metavar="CHAR"
     )
     parser.add_argument(
